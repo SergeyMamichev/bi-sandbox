@@ -1,0 +1,159 @@
+services:
+  # Postgres for DWH
+  postgres_dwh:
+    build:
+      context: ./postgres_dwh
+      dockerfile: Dockerfile
+    container_name: postgres_dwh
+    environment:
+      POSTGRES_USER: ${POSTGRES_DWH_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_DWH_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DWH_DB}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_dwh_data:/var/lib/postgresql/data
+    networks:
+      - dwh_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_DWH_USER} -d ${POSTGRES_DWH_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Postgres for Airflow
+  postgres_airflow:
+    image: postgres:13
+    container_name: postgres_airflow
+    environment:
+      POSTGRES_USER: ${POSTGRES_AIRFLOW_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_AIRFLOW_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_AIRFLOW_DB}
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_airflow_data:/var/lib/postgresql/data
+    networks:
+      - dwh_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_AIRFLOW_USER} -d ${POSTGRES_AIRFLOW_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # MinIO for S3
+  minio:
+    build:
+      context: ./minio
+      dockerfile: Dockerfile
+    container_name: minio
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - dwh_network
+    restart: unless-stopped
+
+  # Airflow Services
+  airflow-init:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: airflow-init
+    command: >
+      bash -c "airflow db init && airflow users create \
+      --username ${AIRFLOW_ADMIN_USERNAME} \
+      --firstname ${AIRFLOW_ADMIN_FIRSTNAME} \
+      --lastname ${AIRFLOW_ADMIN_LASTNAME} \
+      --role Admin \
+      --email ${AIRFLOW_ADMIN_EMAIL} \
+      --password ${AIRFLOW_ADMIN_PASSWORD}"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres_airflow:5432/${POSTGRES_AIRFLOW_DB}
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres_airflow:5432/${POSTGRES_AIRFLOW_DB}
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+    networks:
+      - dwh_network
+    depends_on:
+      postgres_airflow:
+        condition: service_healthy
+
+  airflow-webserver:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: airflow-webserver
+    command: webserver
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres_airflow:5432/${POSTGRES_AIRFLOW_DB}
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres_airflow:5432/${POSTGRES_AIRFLOW_DB}
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+    ports:
+      - "8080:8080"
+    networks:
+      - dwh_network
+    depends_on:
+      - postgres_airflow
+      - airflow-init
+    restart: unless-stopped
+
+  airflow-scheduler:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: airflow-scheduler
+    command: scheduler
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres_airflow:5432/${POSTGRES_AIRFLOW_DB}
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres_airflow:5432/${POSTGRES_AIRFLOW_DB}
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+    networks:
+      - dwh_network
+    depends_on:
+      - postgres_airflow
+      - airflow-init
+    restart: unless-stopped
+
+volumes:
+  postgres_dwh_data:
+    name: postgres_dwh_data
+  postgres_airflow_data:
+    name: postgres_airflow_data
+  minio_data:
+    name: minio_data
+
+networks:
+  dwh_network:
+    driver: bridge

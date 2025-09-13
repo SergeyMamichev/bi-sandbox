@@ -1,0 +1,7 @@
+apache-airflow[postgres,celery]==2.8.1
+apache-airflow-providers-postgres==5.6.0
+apache-airflow-providers-http==4.5.0
+minio==7.1.15
+psycopg2-binary==2.9.7
+pandas==2.0.3
+python-dotenv==1.0.0
