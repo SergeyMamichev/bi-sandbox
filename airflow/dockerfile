@@ -2,7 +2,7 @@ FROM apache/airflow:2.8.1
 
 USER root
 
-# Installing additional system packages
+# Installing system packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential \
@@ -12,11 +12,24 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Creating a scripts folder and setting permissions
+RUN mkdir -p /opt/airflow/scripts && \
+    chown -R airflow:root /opt/airflow/scripts
+
 USER airflow
 
-# Requirements and install Python package
+# Installing Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copying scripts with permissions
+COPY --chown=airflow:root scripts/init_airflow.sh /opt/airflow/scripts/init_airflow.sh
+COPY --chown=airflow:root scripts/init_connections.py /opt/airflow/scripts/init_connections.py
+
 # Copy DAGs
-COPY dags/ /opt/airflow/dags/
+COPY --chown=airflow:root dags/ /opt/airflow/dags/
+
+# Setting permissions to execute a init-script
+USER root
+RUN chmod +x /opt/airflow/scripts/init_airflow.sh
+USER airflow

@@ -73,20 +73,24 @@ services:
       context: ./airflow
       dockerfile: Dockerfile
     container_name: airflow-init
-    command: >
-      bash -c "airflow db init && airflow users create \
-      --username ${AIRFLOW_ADMIN_USERNAME} \
-      --firstname ${AIRFLOW_ADMIN_FIRSTNAME} \
-      --lastname ${AIRFLOW_ADMIN_LASTNAME} \
-      --role Admin \
-      --email ${AIRFLOW_ADMIN_EMAIL} \
-      --password ${AIRFLOW_ADMIN_PASSWORD}"
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres_airflow:5432/${POSTGRES_AIRFLOW_DB}
-      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres_airflow:5432/${POSTGRES_AIRFLOW_DB}
       AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW_ADMIN_USERNAME: ${AIRFLOW_ADMIN_USERNAME}
+      AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
+      AIRFLOW_ADMIN_EMAIL: ${AIRFLOW_ADMIN_EMAIL}
+      AIRFLOW_ADMIN_FIRSTNAME: ${AIRFLOW_ADMIN_FIRSTNAME}
+      AIRFLOW_ADMIN_LASTNAME: ${AIRFLOW_ADMIN_LASTNAME}
+      POSTGRES_DWH_USER: ${POSTGRES_DWH_USER}
+      POSTGRES_DWH_PASSWORD: ${POSTGRES_DWH_PASSWORD}
+      POSTGRES_DWH_DB: ${POSTGRES_DWH_DB}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      PYTHONUNBUFFERED: 1
+    command: >
+      bash -c "/opt/airflow/scripts/init_airflow.sh"
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -106,10 +110,15 @@ services:
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres_airflow:5432/${POSTGRES_AIRFLOW_DB}
-      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres_airflow:5432/${POSTGRES_AIRFLOW_DB}
       AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
       AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      POSTGRES_DWH_USER: ${POSTGRES_DWH_USER}
+      POSTGRES_DWH_PASSWORD: ${POSTGRES_DWH_PASSWORD}
+      POSTGRES_DWH_DB: ${POSTGRES_DWH_DB}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      PYTHONUNBUFFERED: 1
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -132,9 +141,14 @@ services:
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres_airflow:5432/${POSTGRES_AIRFLOW_DB}
-      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres_airflow:5432/${POSTGRES_AIRFLOW_DB}
       AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      POSTGRES_DWH_USER: ${POSTGRES_DWH_USER}
+      POSTGRES_DWH_PASSWORD: ${POSTGRES_DWH_PASSWORD}
+      POSTGRES_DWH_DB: ${POSTGRES_DWH_DB}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      PYTHONUNBUFFERED: 1
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
