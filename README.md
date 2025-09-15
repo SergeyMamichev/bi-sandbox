@@ -1,11 +1,17 @@
-# study-dwh-etl-bi
-A study project to explore modern ETL, DWH, and BI concepts. Implements a data pipeline built with Apache Airflow and Python, extracting data from sources, transforming it, and loading into a PostgreSQL data warehouse for analysis.
+# BI Sandbox
+A data experimentation playground: building a minimal BI system from the ground up. This repository is my personal lab for learning and practicing the core components of a Business Intelligence stack:
+- Data Warehouse (DWH): Schema design and data population.
+- ETL/ELT Processes: Data extraction, transformation, and loading.
+- Visualization & Reporting: Dashboard setup.
+Here, I experiment with various tools, make mistakes, find solutions, and strive to understand how everything works under the hood.
+
+Tech Stack: PostgreSQL, Airflow, S3 (MinIO)
 
 ## Quickstart
 
 1. Clone the repository
 ```sh
-git clone https://github.com/SergeyMamichev/study-dwh-etl-bi.git
+git clone https://github.com/SergeyMamichev/bi-sandbox.git
 ```
 
 2. Navigate to project directory
