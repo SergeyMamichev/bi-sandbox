@@ -37,7 +37,7 @@ services:
     networks:
       - dwh_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_AIRFLOW_USER} -d ${POSTGRES_AIRFLOW_DB}"]
       interval: 10s
       timeout: 5s
       retries: 3
