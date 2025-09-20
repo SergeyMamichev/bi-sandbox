@@ -1,7 +1,8 @@
-FROM quay.io/minio/minio:RELEASE.2025-02-18T16-25-55Z
+FROM minio/minio:RELEASE.2025-09-07T16-13-09Z
 
 COPY init-buckets.sh /init-buckets.sh
+COPY entrypoint.sh /entrypoint.sh
 
-RUN chmod +x /init-buckets.sh
+RUN chmod +x /init-buckets.sh /entrypoint.sh
 
-ENTRYPOINT ["/bin/sh", "-c", "minio server /data --console-address ':9001' & sleep 10 && /init-buckets.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
