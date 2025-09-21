@@ -25,4 +25,11 @@ if ! python /opt/airflow/scripts/init_connections.py 2> /tmp/init_connections_er
     exit 1
 fi
 
+echo "Running init_variables.py script..."
+if ! python /opt/airflow/scripts/init_variables.py 2> /tmp/init_variables_error.log; then
+    echo "Error executing init_variables.py:"
+    cat /tmp/init_variables_error.log
+    exit 1
+fi
+
 echo "Airflow initialization complete!"

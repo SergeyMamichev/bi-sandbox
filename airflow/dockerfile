@@ -25,6 +25,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copying scripts with permissions
 COPY --chown=airflow:root scripts/init_airflow.sh /opt/airflow/scripts/init_airflow.sh
 COPY --chown=airflow:root scripts/init_connections.py /opt/airflow/scripts/init_connections.py
+COPY --chown=airflow:root scripts/init_variables.py /opt/airflow/scripts/init_variables.py
 
 # Copy DAGs
 COPY --chown=airflow:root dags/ /opt/airflow/dags/

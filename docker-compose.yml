@@ -91,6 +91,7 @@ services:
       POSTGRES_DWH_DB: ${POSTGRES_DWH_DB}
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      WEATHER_API_KEY: ${WEATHER_API_KEY}
       PYTHONUNBUFFERED: 1
     command: >
       bash -c "/opt/airflow/scripts/init_airflow.sh"
