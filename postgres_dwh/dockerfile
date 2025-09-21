@@ -1,1 +1,23 @@
 FROM postgres:13
+
+# Install the required packages
+RUN apt-get update && \
+    apt-get install -y curl gettext-base && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Flyway 
+RUN curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/10.20.0/flyway-commandline-10.20.0-linux-x64.tar.gz -o flyway.tar.gz && \
+    tar -xzf flyway.tar.gz && \
+    mv flyway-10.20.0 /flyway && \
+    rm flyway.tar.gz
+
+COPY sql/migrations/ /flyway/sql/
+COPY flyway.conf /flyway/conf/flyway.conf
+COPY scripts/ /scripts/
+COPY entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /scripts/*.sh && chmod +x /entrypoint.sh
+
+# Custom entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["postgres"]

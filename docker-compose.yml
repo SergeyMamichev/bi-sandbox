@@ -5,14 +5,18 @@ services:
       context: ./postgres_dwh
       dockerfile: Dockerfile
     container_name: postgres_dwh
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: ${POSTGRES_DWH_USER}
       POSTGRES_PASSWORD: ${POSTGRES_DWH_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DWH_DB}
+      WEATHER_API_KEY: ${WEATHER_API_KEY}
     ports:
       - "5434:5432"
     volumes:
       - postgres_dwh_data:/var/lib/postgresql/data
+      - ./postgres_dwh/sql/migrations:/flyway/sql
     networks:
       - dwh_network
     healthcheck:
